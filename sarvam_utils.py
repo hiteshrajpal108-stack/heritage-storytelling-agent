@@ -67,11 +67,22 @@ def load_sarvam_api_key(explicit_key: Optional[str] = None) -> str:
     """
     Resolve Sarvam API key in order of priority:
     1. Explicit key argument (from UI input)
-    2. os.environ['SARVAM_API_KEY']
-    3. .env file in project directory
+    2. Streamlit Cloud Secrets (st.secrets["SARVAM_API_KEY"])
+    3. os.environ['SARVAM_API_KEY']
+    4. .env file in project directory
     """
     if explicit_key and explicit_key.strip():
         return explicit_key.strip()
+
+    # Check Streamlit Secrets (used in Streamlit Community Cloud deployment)
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and "SARVAM_API_KEY" in st.secrets:
+            secret_val = st.secrets["SARVAM_API_KEY"]
+            if secret_val and str(secret_val).strip():
+                return str(secret_val).strip()
+    except Exception:
+        pass
 
     env_key = os.environ.get("SARVAM_API_KEY")
     if env_key and env_key.strip():

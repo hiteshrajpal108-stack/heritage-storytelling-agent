@@ -195,11 +195,24 @@ def _generate_with_sarvam(prompt: str, system_instruction: str, api_key: Optiona
     return response.choices[0].message.content.strip()
 
 
+def _get_secret(key_name: str, fallback_arg: Optional[str] = None) -> Optional[str]:
+    if fallback_arg and fallback_arg.strip():
+        return fallback_arg.strip()
+    try:
+        import streamlit as st
+        if hasattr(st, "secrets") and key_name in st.secrets:
+            val = st.secrets[key_name]
+            if val and str(val).strip():
+                return str(val).strip()
+    except Exception:
+        pass
+    return os.environ.get(key_name)
+
 def _generate_with_openai(prompt: str, system_instruction: str, api_key: Optional[str] = None) -> str:
     """Generate content using OpenAI GPT-4o."""
-    key = api_key or os.environ.get("OPENAI_API_KEY")
+    key = _get_secret("OPENAI_API_KEY", api_key)
     if not key:
-        raise ValueError("OpenAI API Key is required. Please set OPENAI_API_KEY in .env or the sidebar.")
+        raise ValueError("OpenAI API Key is required. Please set OPENAI_API_KEY in .env, Streamlit Secrets, or the sidebar.")
 
     try:
         from openai import OpenAI
@@ -219,9 +232,9 @@ def _generate_with_openai(prompt: str, system_instruction: str, api_key: Optiona
 
 def _generate_with_gemini(prompt: str, system_instruction: str, api_key: Optional[str] = None) -> str:
     """Generate content using Google Gemini."""
-    key = api_key or os.environ.get("GEMINI_API_KEY")
+    key = _get_secret("GEMINI_API_KEY", api_key)
     if not key:
-        raise ValueError("Gemini API Key is required. Please set GEMINI_API_KEY in .env or the sidebar.")
+        raise ValueError("Gemini API Key is required. Please set GEMINI_API_KEY in .env, Streamlit Secrets, or the sidebar.")
 
     try:
         from google import genai

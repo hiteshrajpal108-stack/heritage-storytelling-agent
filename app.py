@@ -241,12 +241,26 @@ with st.sidebar:
     )
 
     with st.expander("🔑 API Key Settings", expanded=(not bool(loaded_key))):
-        sarvam_key_input = st.text_input(
-            "Sarvam API Key",
-            value=loaded_key,
-            type="password",
-            help="Configured from environment or .env by default.",
-        )
+        if loaded_key:
+            st.info("🔒 Sarvam API Key is securely active from environment.")
+            override_key = st.text_input(
+                "Override Sarvam Key (Optional)",
+                value="",
+                type="password",
+                placeholder="Leave blank to use secure environment key",
+                help="The server already holds your key securely. Only enter a key here if you want to override it.",
+            )
+            sarvam_key_input = override_key.strip() if override_key.strip() else loaded_key
+        else:
+            st.warning("⚠️ No Sarvam API Key found. Please enter one below.")
+            sarvam_key_input = st.text_input(
+                "Enter Sarvam API Key",
+                value="",
+                type="password",
+                placeholder="sk_...",
+                help="Enter your Sarvam API subscription key.",
+            )
+
         llm_provider = st.selectbox(
             "Storyteller LLM Engine",
             options=["sarvam", "openai", "gemini"],
@@ -259,9 +273,27 @@ with st.sidebar:
         )
         llm_key_input = ""
         if llm_provider == "openai":
-            llm_key_input = st.text_input("OpenAI API Key", type="password")
+            env_openai = os.environ.get("OPENAI_API_KEY", "")
+            if env_openai:
+                st.info("🔒 OpenAI Key securely active from environment.")
+            override_openai = st.text_input(
+                "OpenAI API Key" if not env_openai else "Override OpenAI Key (Optional)",
+                value="",
+                type="password",
+                placeholder="sk-..." if not env_openai else "Leave blank to use environment key",
+            )
+            llm_key_input = override_openai.strip() if override_openai.strip() else env_openai
         elif llm_provider == "gemini":
-            llm_key_input = st.text_input("Gemini API Key", type="password")
+            env_gemini = os.environ.get("GEMINI_API_KEY", "")
+            if env_gemini:
+                st.info("🔒 Gemini Key securely active from environment.")
+            override_gemini = st.text_input(
+                "Gemini API Key" if not env_gemini else "Override Gemini Key (Optional)",
+                value="",
+                type="password",
+                placeholder="AIza..." if not env_gemini else "Leave blank to use environment key",
+            )
+            llm_key_input = override_gemini.strip() if override_gemini.strip() else env_gemini
 
     st.markdown("---")
     st.markdown("### 🗣️ Voice & Language")
